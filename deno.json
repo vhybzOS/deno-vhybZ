@@ -8,38 +8,29 @@
   },
   "lint": {
     "rules": {
-      "tags": [
-        "fresh",
-        "recommended"
-      ]
+      "tags": ["recommended"]
     }
   },
-  "exclude": [
-    "**/_fresh/*"
-  ],
+  "exclude": ["**/_fresh/*"],
   "imports": {
-    "fresh": "jsr:@fresh/core@^2.0.0-alpha.34",
-    "@fresh/plugin-tailwind": "jsr:@fresh/plugin-tailwind@^0.0.1-alpha.7",
-    "preact": "npm:preact@^10.26.6",
-    "@preact/signals": "npm:@preact/signals@^2.0.4",
-    "tailwindcss": "npm:tailwindcss@^3.4.3"
+    "@cmd-johnson/oauth2-client": "jsr:@cmd-johnson/oauth2-client@^2.0.0",
+    "fresh": "jsr:@fresh/core@2.0.0-alpha.34",
+    "@fresh/plugin-tailwind": "jsr:@fresh/plugin-tailwind@0.0.1-alpha.7",
+    "preact": "npm:preact@10.26.6",
+    "@preact/signals": "npm:@preact/signals@2.0.4",
+    "tailwindcss": "npm:tailwindcss@3.4.3",
+    "mongodb": "npm:mongodb@6.0.0",
+    "zod/v4": "npm:zod@3.25.42/v4",
+    "zod": "npm:zod@3.25.42",
+    "std/dotenv": "jsr:@std/dotenv@0.224.0",
+    "std/http/cookie": "jsr:@std/http@0.224.0/cookie",
+    "oauth2_client": "jsr:@cmd-johnson/oauth2-client@^2.0.0"
   },
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.asynciterable",
-      "dom.iterable",
-      "deno.ns"
-    ],
+    "lib": ["dom", "dom.asynciterable", "dom.iterable", "deno.ns"],
     "jsx": "precompile",
     "jsxImportSource": "preact",
-    "jsxPrecompileSkipElements": [
-      "a",
-      "img",
-      "source",
-      "body",
-      "html",
-      "head"
-    ]
-  }
+    "jsxPrecompileSkipElements": ["a", "img", "source", "body", "html", "head"]
+  },
+  "nodeModulesDir": "auto"
 }

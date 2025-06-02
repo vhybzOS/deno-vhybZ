@@ -1,24 +1,151 @@
 import { App, fsRoutes, staticFiles } from "fresh";
+import { db, ensureDbConnection } from "./database.ts";
 import { define, type State } from "./utils.ts";
+import { OAuth2Client } from "oauth2_client";
+import { getCookies, setCookie } from "std/http/cookie";
+
+// OAuth2 client setup
+const oauth2Client = new OAuth2Client({
+  clientId: Deno.env.get("GOOGLE_CLIENT_ID") || "",
+  clientSecret: Deno.env.get("GOOGLE_CLIENT_SECRET") || "",
+  authorizationEndpointUri: "https://accounts.google.com/o/oauth2/v2/auth",
+  tokenUri: "https://oauth2.googleapis.com/token",
+  redirectUri: "http://localhost:8000/auth/google/callback",
+  defaults: {
+    scope: ["profile", "email"],
+  },
+});
+
+// Session middleware
+const sessionMiddleware = define.middleware(async (ctx) => {
+  const cookies = getCookies(ctx.req.headers);
+  const sessionId = cookies.session;
+
+  if (sessionId) {
+    ctx.state.session = { userId: sessionId };
+  }
+
+  return await ctx.next();
+});
+
+// Auth middleware
+const requireAuth = define.middleware((ctx) => {
+  if (!ctx.state.session?.userId) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  return ctx.next();
+});
 
 export const app = new App<State>();
 
-app.use(staticFiles());
+// Global middleware
+app.use(sessionMiddleware).use(staticFiles());
 
-// this is the same as the /api/:name route defined via a file. feel free to delete this!
-app.get("/api2/:name", (ctx) => {
-  const name = ctx.params.name;
-  return new Response(
-    `Hello, ${name.charAt(0).toUpperCase() + name.slice(1)}!`,
-  );
+// Static files handler
+app.use(async (ctx) => {
+  const url = new URL(ctx.req.url);
+  if (url.pathname.startsWith("/static")) {
+    return await ctx.next();
+  }
+  return await ctx.next();
 });
 
-// this can also be defined via a file. feel free to delete this!
-const exampleLoggerMiddleware = define.middleware((ctx) => {
-  console.log(`${ctx.req.method} ${ctx.req.url}`);
-  return ctx.next();
+// Google OAuth routes
+app.get("/auth/google", async (ctx) => {
+  const authUri = await oauth2Client.code.getAuthorizationUri();
+
+  const response = new Response(null, {
+    status: 302,
+    headers: {
+      Location: authUri.toString(),
+    },
+  });
+
+  setCookie(response.headers, {
+    name: "code_verifier",
+    value: authUri.codeVerifier,
+    httpOnly: true,
+    path: "/",
+    maxAge: 600, // 10 minutes
+  });
+
+  return response;
 });
-app.use(exampleLoggerMiddleware);
+
+app.get("/auth/google/callback", async (ctx) => {
+  const url = new URL(ctx.req.url);
+  const code = url.searchParams.get("code");
+  const cookies = getCookies(ctx.req.headers);
+  const codeVerifier = cookies.code_verifier;
+
+  if (!code || !codeVerifier) {
+    return new Response("Invalid request", { status: 400 });
+  }
+
+  try {
+    const tokens = await oauth2Client.code.getToken(url, { codeVerifier });
+    const userInfo = await fetch(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: { Authorization: `Bearer ${tokens.accessToken}` },
+      },
+    ).then((r) => r.json());
+
+    const user = await db.findOrCreateUser({
+      id: userInfo.sub,
+      email: userInfo.email,
+      name: userInfo.name,
+      picture: userInfo.picture,
+    });
+
+    if (!user._id) {
+      throw new Error("User creation failed");
+    }
+
+    const response = new Response(null, {
+      status: 302,
+      headers: { Location: "/" },
+    });
+
+    setCookie(response.headers, {
+      name: "session",
+      value: user._id.toString(),
+      path: "/",
+      httpOnly: true,
+      secure: false,
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return response;
+  } catch (error) {
+    console.error("OAuth error:", error);
+    return new Response("Authentication failed", { status: 500 });
+  }
+});
+
+// Protected route
+app.get("/profile", requireAuth, (ctx) => {
+  return new Response(`Welcome user ${ctx.state.session?.userId}`);
+});
+
+// Logout
+app.post("/auth/logout", () => {
+  const response = new Response(null, {
+    status: 302,
+    headers: { Location: "/" },
+  });
+
+  setCookie(response.headers, {
+    name: "session",
+    value: "",
+    path: "/",
+    expires: new Date(0),
+  });
+
+  return response;
+});
+
+await ensureDbConnection();
 
 await fsRoutes(app, {
   loadIsland: (path) => import(`./islands/${path}`),
@@ -26,5 +153,5 @@ await fsRoutes(app, {
 });
 
 if (import.meta.main) {
-  await app.listen();
+  await app.listen({ port: 8000 });
 }
