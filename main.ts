@@ -3,6 +3,7 @@ import { db, ensureDbConnection } from "./database.ts";
 import { define, type State } from "./utils.ts";
 import { OAuth2Client } from "oauth2_client";
 import { getCookies, setCookie } from "std/http/cookie";
+import { serveFile } from "https://deno.land/std@0.224.0/http/file_server.ts";
 
 // OAuth2 client setup
 const oauth2Client = new OAuth2Client({
@@ -41,12 +42,22 @@ export const app = new App<State>();
 // Global middleware
 app.use(sessionMiddleware).use(staticFiles());
 
-// Static files handler
+// Serve React app assets
 app.use(async (ctx) => {
   const url = new URL(ctx.req.url);
-  if (url.pathname.startsWith("/static")) {
-    return await ctx.next();
+  
+  // Serve built React app assets and favicon
+  if (url.pathname.startsWith("/assets/") || url.pathname === "/logo.png") {
+    try {
+      const filePath = `./web-vhybZ/dist${url.pathname}`;
+      const response = await serveFile(ctx.req, filePath);
+      return response;
+    } catch {
+      return new Response("Not Found", { status: 404 });
+    }
   }
+  
+  // Continue to next middleware
   return await ctx.next();
 });
 
@@ -147,9 +158,38 @@ app.post("/auth/logout", () => {
 
 await ensureDbConnection();
 
+// API routes from Fresh
 await fsRoutes(app, {
   loadIsland: (path) => import(`./islands/${path}`),
   loadRoute: (path) => import(`./routes/${path}`),
+});
+
+// Catch-all route to serve React app for frontend routes
+app.use(async (ctx) => {
+  const url = new URL(ctx.req.url);
+  
+  // Skip API routes, auth routes, and static assets
+  if (url.pathname.startsWith("/api/") || 
+      url.pathname.startsWith("/auth/") || 
+      url.pathname.startsWith("/assets/") ||
+      url.pathname.startsWith("/static/")) {
+    return await ctx.next();
+  }
+  
+  // Serve React app index.html for all other routes
+  try {
+    const response = await serveFile(ctx.req, "./web-vhybZ/dist/index.html");
+    return new Response(response.body, {
+      status: response.status,
+      headers: {
+        ...Object.fromEntries(response.headers),
+        "Content-Type": "text/html; charset=utf-8",
+      },
+    });
+  } catch (error) {
+    console.error("Error serving React app:", error);
+    return new Response("Internal Server Error", { status: 500 });
+  }
 });
 
 if (import.meta.main) {

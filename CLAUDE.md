@@ -5,7 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Core Development
-- `deno task dev` - Start development server with file watching
+- `deno task dev` - Start development server (builds React app and runs Deno backend)
+- `deno task dev:react` - Run React app in development mode only
 - `deno task build` - Build the application for production
 - `deno task start` - Run production server
 - `deno task check` - Run all checks (format, lint, type checking)
@@ -14,6 +15,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Quality Assurance
 Before committing changes, always run:
 - `deno task check` - Validates formatting, linting, and type checking
+
+### IMPORTANT: Always Use Deno Commands
+- **NEVER use npm commands** - This is a Deno project, use Deno equivalents
+- For dependencies: Use JSR imports in deno.json, not package.json
+- For scripts: Use deno task, not npm run
+- For React app: Navigate to web-vhybZ/ and use npm there only
 
 ## Architecture Overview
 

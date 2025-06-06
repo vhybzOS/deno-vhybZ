@@ -174,15 +174,24 @@ GOOGLE_CLIENT_SECRET=your-client-secret
 
 ### Running Locally
 ```bash
-# Install dependencies
+# Cache dependencies
 deno cache --reload
 
-# Start development server
+# Start development server (builds React app and runs backend)
 deno task dev
+
+# Or run React app in development mode separately
+deno task dev:react
 
 # Run tests (TBD)
 deno test
 ```
+
+### CRITICAL: Deno vs npm Commands
+- **This is a Deno project** - Always use `deno` commands at the root level
+- **NEVER use npm commands** in the root directory
+- For the React app in `web-vhybZ/`: cd into that directory first, then use npm
+- Example: `cd web-vhybZ && npm install && npm run build`
 
 ## Deployment
 
