@@ -61,6 +61,8 @@ This design directly addresses the core needs identified in user interviews, par
 
 ## Backend Architecture
 
+**Role**: Data store and API layer (does NOT handle AI/LLM interactions)
+
 ### Technology Stack
 - **Runtime**: Deno 1.40+
 - **Web Framework**: Fresh 2.0
@@ -68,6 +70,11 @@ This design directly addresses the core needs identified in user interviews, par
 - **Authentication**: Google OAuth 2.0
 - **Package Management**: JSR (JavaScript Registry)
 - **Deployment**: Deno Deploy (planned)
+
+### Separation of Concerns
+- **Backend Responsibilities**: User management, artifact storage, authentication, analytics, public hosting
+- **vhybZ Library Responsibilities**: LLM API calls, HTML generation, real-time preview logic
+- **Frontend Responsibilities**: UI layer, imports vhybZ library for core functionality
 
 ### Database Design (`database.ts`)
 
@@ -112,41 +119,43 @@ This design directly addresses the core needs identified in user interviews, par
    - Protects routes requiring authentication
    - Returns 401 for unauthenticated requests
 
-#### API Endpoints
+#### API Endpoints (Data Storage Only)
 - `GET /api/me` - Get current user profile (protected)
-- `GET /api/apps` - List user's apps (protected)
-- `POST /api/apps` - Create new app (protected)
-- `GET /api/apps/:id` - Get app details (public/private based on settings)
+- `GET /api/conversations` - List user's conversations (protected)
+- `POST /api/conversations` - Store conversation data from frontend (protected)
+- `GET /api/artifacts` - List user's artifacts (protected)
+- `POST /api/artifacts` - Store artifact HTML from frontend (protected)
+- `PUT /api/artifacts/:id` - Update artifact with new HTML from frontend (protected)
+- `GET /api/artifacts/:id` - Get artifact details (public/private based on settings)
 - `POST /auth/logout` - Logout user
 
-## Frontend Architecture (Planned)
+**Note**: Backend does NOT generate artifacts or call LLMs - it only stores data sent by frontend clients.
 
-### Technology Stack
-- **Framework**: Preact (via Fresh)
-- **Styling**: Tailwind CSS
-- **State Management**: Preact Signals
-- **Build Tool**: Vite (via Fresh)
+## Architecture Overview
 
-### Key Components
-1. **Authentication**
-   - Google OAuth flow
-   - Protected route components
-   - User profile management
+### Repository Structure
+1. **Backend API** (this repo): https://github.com/vhybzOS/deno-vhybZ
+2. **Core Library**: https://github.com/vhybzOS/vhybZ
+3. **Web Client**: https://github.com/vhybzOS/web-vhybZ  
+4. **Mobile Client**: https://github.com/vhybzOS/RN-vhybZ
 
-2. **Editor**
-   - Canvas-based artifact editor
-   - Drag-and-drop components
-   - Real-time preview
+### Core vhybZ Library (https://github.com/vhybzOS/vhybZ)
+- **LLM Integration**: Direct API calls to OpenAI, Anthropic, etc.
+- **HTML Generation**: Creates artifact HTML/CSS/JS based on LLM responses
+- **Real-time Preview**: Shows artifact preview as it's being generated
+- **SOUL Framework**: Meta-agents for persistent memory and agency
+- **Confidant**: Bridge for physical/digital world interactions
 
-3. **Gallery**
-   - Browse and discover public artifacts
-   - Search and filtering
-   - User profiles
+### Frontend Client Responsibilities
+- **UI Layer**: User interface components and navigation
+- **Library Integration**: Imports and uses vhybZ library for core functionality
+- **Data Flow**: Manages state between vhybZ library and backend API
 
-4. **Player**
-   - Interactive artifact viewer
-   - Responsive design
-   - Social sharing
+### Backend Integration
+- Frontend clients use vhybZ library which calls backend APIs
+- Backend stores/retrieves conversations and artifacts from vhybZ library
+- Backend serves stored artifacts on public URLs (`username.vhybz.com/artifact-name`)
+- Authentication handled by backend, session shared across all clients
 
 ## Development Setup
 
