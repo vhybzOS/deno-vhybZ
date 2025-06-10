@@ -15,8 +15,12 @@
   "exclude": ["**/_fresh/*"],
   "imports": {
     "@cmd-johnson/oauth2-client": "jsr:@cmd-johnson/oauth2-client@^2.0.0",
+    "@langchain/core": "npm:@langchain/core@^0.3.57",
+    "@langchain/google-genai": "npm:@langchain/google-genai@^0.2.10",
+    "@langchain/langgraph": "npm:@langchain/langgraph@^0.3.1",
     "fresh": "jsr:@fresh/core@2.0.0-alpha.34",
     "@fresh/plugin-tailwind": "jsr:@fresh/plugin-tailwind@0.0.1-alpha.7",
+    "mustache": "npm:mustache@^4.2.0",
     "preact": "npm:preact@10.26.6",
     "@preact/signals": "npm:@preact/signals@2.0.4",
     "tailwindcss": "npm:tailwindcss@3.4.3",
