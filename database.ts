@@ -25,6 +25,8 @@ const BaseUserSchema = z.object({
   email: z.email(),
   name: z.string(),
   avatar: z.url().optional(),
+  role: z.enum(['user', 'admin', 'superadmin']).default('user'),
+  permissions: z.array(z.string()).optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -218,6 +220,8 @@ class Database {
       email: googleProfile.email,
       name: googleProfile.name,
       avatar: googleProfile.picture,
+      role: 'user' as const,
+      permissions: [],
       createdAt: now,
       updatedAt: now,
     };
@@ -232,6 +236,18 @@ class Database {
     }
 
     return validatedData as User;
+  }
+
+  async getUser(id: string): Promise<User | null> {
+    try {
+      const user = await this.users.findOne({ _id: new ObjectId(id) });
+      if (!user) return null;
+      
+      return parseWithZod(UserSchema, user, "user");
+    } catch (error) {
+      console.error("Error getting user:", error);
+      return null;
+    }
   }
 
   // App operations

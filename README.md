@@ -18,54 +18,27 @@ Backend for vhybZ - A Fresh 2.0 web application with MongoDB and Google OAuth.
 
 The application automatically detects your environment and configures MongoDB connection:
 
-- **Windows**: Uses `mongodb://localhost:27017`
-- **macOS/Linux**: Uses `mongodb://localhost:27017`
-- **WSL2**: Automatically detects Windows host IP and uses `mongodb://WINDOWS_HOST_IP:27017`
+- **All environments**: Uses `mongodb://localhost:27017` by default
 - **Production**: Set `MONGODB_URI` environment variable
 
-### Windows + WSL2 Setup
-
-If you're running the app in WSL2 but have MongoDB installed on Windows, you need to configure MongoDB to accept external connections:
-
-1. **Edit MongoDB Configuration** (`C:\Program Files\MongoDB\Server\7.0\bin\mongod.cfg`):
-   ```yaml
-   net:
-     port: 27017
-     bindIp: 0.0.0.0  # Allow connections from any IP (change from 127.0.0.1)
-   ```
-
-2. **Restart MongoDB Service**:
-   - Open Services (Win+R → `services.msc`)
-   - Find "MongoDB Server"
-   - Right-click → Restart
-
-3. **Configure Windows Firewall** (if needed):
-   ```powershell
-   # Run as Administrator
-   New-NetFirewallRule -DisplayName "MongoDB" -Direction Inbound -Protocol TCP -LocalPort 27017 -Action Allow
-   ```
-
-4. **Verify Connection** from WSL2:
-   ```bash
-   # Get Windows host IP
-   ip route show | grep -i default
-   
-   # Test MongoDB connection (if you have mongo client)
-   mongo --host WINDOWS_HOST_IP:27017
-   ```
-
-### Alternative: Local MongoDB in WSL2
-
-Instead of using Windows MongoDB, you can install MongoDB directly in WSL2:
-
+**WSL2/Ubuntu:**
 ```bash
-# Install MongoDB in WSL2
 curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor
 echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
 sudo apt-get update
 sudo apt-get install -y mongodb-org
 sudo systemctl start mongod
 sudo systemctl enable mongod
+```
+
+**Windows:**
+Download and install from [MongoDB Downloads](https://www.mongodb.com/try/download/community)
+
+**macOS:**
+```bash
+brew tap mongodb/brew
+brew install mongodb-community
+brew services start mongodb-community
 ```
 
 ## Authentication Setup

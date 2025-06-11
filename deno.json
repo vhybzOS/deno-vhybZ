@@ -1,7 +1,7 @@
 {
   "tasks": {
     "check": "deno fmt --check . && deno lint . && deno check **/*.ts && deno check **/*.tsx",
-    "dev": "cd web-vhybZ && npm run build && cd .. && deno run -A --watch=static/,routes/,main.ts,web-vhybZ/dist/ dev.ts",
+    "dev": "deno run -A --watch=static/,routes/,main.ts,web-vhybZ/dist/ dev.ts",
     "dev:react": "cd web-vhybZ && npm run dev",
     "build": "cd web-vhybZ && npm run build && cd .. && deno run -A dev.ts build",
     "start": "deno run -A main.ts",

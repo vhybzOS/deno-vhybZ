@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## IMPORTANT: Always Check DIARY.md
+- **Read DIARY.md first** on each startup to understand project history and recent changes
+- **Update DIARY.md** with a timestamped entry for every change you make
+- Include change type, description, rationale, and files modified in each entry
+
 ## Development Commands
 
 ### Core Development
@@ -16,11 +21,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Before committing changes, always run:
 - `deno task check` - Validates formatting, linting, and type checking
 
-### IMPORTANT: Always Use Deno Commands
-- **NEVER use npm commands** - This is a Deno project, use Deno equivalents
-- For dependencies: Use JSR imports in deno.json, not package.json
-- For scripts: Use deno task, not npm run
-- For React app: Navigate to web-vhybZ/ and use npm there only
+### Development Environment Separation
+
+#### Backend (Root Directory) - Use Deno
+- **Backend commands**: Use `deno task` commands only
+- **Dependencies**: JSR imports in deno.json
+- **Runtime**: Deno with Fresh framework
+- **Never use npm commands** in the root directory
+
+#### Frontend (web-vhybZ/) - Use Node.js
+- **Frontend commands**: Use standard `npm` commands  
+- **Dependencies**: npm packages in package.json
+- **Runtime**: Node.js with React Router 7
+- **Never use deno commands** in web-vhybZ directory
+
+#### Command Examples
+```bash
+# Root directory (Backend)
+deno task dev          # Start backend server
+deno task check        # Lint and type check backend
+
+# web-vhybZ directory (Frontend) 
+npm run dev           # Start React dev server
+npm run build         # Build React app
+npm run lint          # Lint React code
+```
 
 ## Architecture Overview
 

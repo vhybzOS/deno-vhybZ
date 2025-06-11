@@ -14,35 +14,18 @@ async function setupEnvironment() {
 
   let mongoUri = "mongodb://localhost:27017";
   
-  // Detect if running in WSL2
+  // Detect if running in WSL2 (now defaults to local MongoDB)
   if (Deno.build.os === "linux") {
     try {
       // Check if we're in WSL2 by looking for WSL-specific files
       const wslRelease = await Deno.readTextFile("/proc/version").catch(() => "");
       if (wslRelease.toLowerCase().includes("wsl") || wslRelease.toLowerCase().includes("microsoft")) {
-        console.log("🐧 Detected WSL2 environment");
-        
-        // Get Windows host IP from WSL2
-        const process = new Deno.Command("ip", {
-          args: ["route", "show"],
-        });
-        const { stdout } = await process.output();
-        const routeOutput = new TextDecoder().decode(stdout);
-        
-        // Extract default gateway (Windows host IP)
-        const defaultLine = routeOutput.split('\n').find(line => line.includes('default'));
-        if (defaultLine) {
-          const hostIp = defaultLine.split(/\s+/)[2];
-          if (hostIp && hostIp.match(/^\d+\.\d+\.\d+\.\d+$/)) {
-            mongoUri = `mongodb://${hostIp}:27017`;
-            console.log(`🔗 Using Windows host MongoDB at ${hostIp}:27017`);
-          }
-        }
+        console.log("🐧 Detected WSL2 environment - using local MongoDB");
       } else {
         console.log("🐧 Detected native Linux environment");
       }
     } catch (error) {
-      console.warn("⚠️  Could not detect WSL2, using localhost:", error.message);
+      console.warn("⚠️  Could not detect environment, using localhost:", error.message);
     }
   } else if (Deno.build.os === "windows") {
     console.log("🪟 Detected Windows environment");

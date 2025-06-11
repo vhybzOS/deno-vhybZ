@@ -39,6 +39,29 @@ const requireAuth = define.middleware((ctx) => {
 
 export const app = new App<State>();
 
+// CORS middleware for React dev server
+app.use(async (ctx) => {
+  // Handle preflight OPTIONS requests
+  if (ctx.req.method === 'OPTIONS') {
+    const response = new Response(null, { status: 204 });
+    response.headers.set('Access-Control-Allow-Origin', 'http://localhost:5173');
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return response;
+  }
+
+  const response = await ctx.next();
+  
+  // Allow credentials for auth cookies
+  response.headers.set('Access-Control-Allow-Origin', 'http://localhost:5173');
+  response.headers.set('Access-Control-Allow-Credentials', 'true');
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  return response;
+});
+
 // Global middleware
 app.use(sessionMiddleware).use(staticFiles());
 
@@ -137,6 +160,26 @@ app.get("/auth/google/callback", async (ctx) => {
 // Protected route
 app.get("/profile", requireAuth, (ctx) => {
   return new Response(`Welcome user ${ctx.state.session?.userId}`);
+});
+
+// Get current user
+app.get("/api/user", requireAuth, async (ctx) => {
+  try {
+    const userId = ctx.state.session?.userId;
+    if (!userId) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const user = await db.getUser(userId);
+    if (!user) {
+      return new Response("User not found", { status: 404 });
+    }
+
+    return Response.json(user);
+  } catch (error) {
+    console.error("Get user error:", error);
+    return new Response("Internal server error", { status: 500 });
+  }
 });
 
 // Logout
